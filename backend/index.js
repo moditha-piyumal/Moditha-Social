@@ -4,12 +4,11 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const typeDefs = require("./schema");
 const User = require("./models/User");
-// SENSITIVE
-const JWT_SECRET = "your_jwt_secret_key"; // Replace with a secure secret in production
+const Post = require("./models/Post"); // Import Post model
+const JWT_SECRET = "your_jwt_secret_key";
 
 mongoose
 	.connect(
-		// SENSITIVE
 		"mongodb+srv://piyumalwijeratne:cccxxxzzzCCCXXXZZZ1992@moditha001.cuz29.mongodb.net/socialMediaDB?retryWrites=true&w=majority",
 		{
 			useNewUrlParser: true,
@@ -27,6 +26,10 @@ const resolvers = {
 		},
 		user: async (_, { id }) => {
 			return await User.findById(id);
+		},
+		getPosts: async () => {
+			// Fetch all posts and populate the author field
+			return await Post.find().populate("author").sort({ createdAt: -1 });
 		},
 	},
 	Mutation: {
@@ -59,7 +62,6 @@ const resolvers = {
 			);
 			return { token, user };
 		},
-		// Other mutations (signupUser, loginUser, etc.)
 		updateUser: async (_, { id, name, email }) => {
 			// Check if the ID is valid
 			if (!mongoose.Types.ObjectId.isValid(id)) {
