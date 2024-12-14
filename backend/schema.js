@@ -29,6 +29,7 @@ const typeDefs = gql`
 		signupUser(name: String!, email: String!, password: String!): AuthPayload!
 		loginUser(email: String!, password: String!): AuthPayload!
 		updateUser(id: ID!, name: String, email: String): User!
+		createPost(content: String!): Post! # New mutation for creating posts
 	}
 `;
 

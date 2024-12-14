@@ -96,9 +96,55 @@ const resolvers = {
 
 			return updatedUser;
 		},
+		createPost: async (_, { content }, context) => {
+			// Debug: Log the Authorization header
+			console.log("Authorization header:", context.req.headers.authorization);
+
+			// Extract the token
+			const token = context.req.headers.authorization;
+			if (!token) {
+				throw new Error("Authorization token is required");
+			}
+
+			// Decode the token
+			let userId;
+			try {
+				const decodedToken = jwt.verify(token.split(" ")[1], JWT_SECRET); // Split 'Bearer' and token
+				userId = decodedToken.userId;
+			} catch (err) {
+				console.error("Token verification error:", err.message); // Debug token errors
+				throw new Error("Invalid or expired token");
+			}
+
+			// Find the user
+			const user = await User.findById(userId);
+			if (!user) {
+				throw new Error("User not found");
+			}
+
+			// Create and save the post
+			const newPost = new Post({
+				content,
+				author: user._id,
+			});
+			await newPost.save();
+
+			// Populate the author field before returning
+			return newPost.populate("author");
+		},
 	},
 };
 
-const server = new ApolloServer({ typeDefs, resolvers });
+const server = new ApolloServer({
+	typeDefs,
+	resolvers,
+	context: ({ req }) => {
+		// Debug: Log the headers to ensure they are received
+		console.log("Headers received:", req.headers);
+
+		// Pass the request object to the context
+		return { req };
+	},
+});
 
 server.listen().then(({ url }) => console.log(`🚀 Server ready at ${url}`));

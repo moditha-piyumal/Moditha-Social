@@ -1,8 +1,32 @@
-import { ApolloClient, InMemoryCache, ApolloProvider } from "@apollo/client";
+import {
+	ApolloClient,
+	InMemoryCache,
+	ApolloProvider,
+	createHttpLink,
+} from "@apollo/client";
+import { setContext } from "@apollo/client/link/context";
 
-// Create an Apollo Client instance
+// Create an HTTP link to your GraphQL server
+const httpLink = createHttpLink({
+	uri: "http://localhost:4000", // Replace with your backend URL
+});
+
+// Use setContext to include the Authorization header in every request
+const authLink = setContext((_, { headers }) => {
+	// Retrieve the token from localStorage
+	const token = localStorage.getItem("token");
+	console.log("Token found in localStorage:", token); // Debugging
+	return {
+		headers: {
+			...headers,
+			Authorization: token ? `Bearer ${token}` : "",
+		},
+	};
+});
+
+// Create Apollo Client with the authLink and httpLink
 const client = new ApolloClient({
-	uri: "http://localhost:4000", // Replace with your GraphQL server URL
+	link: authLink.concat(httpLink),
 	cache: new InMemoryCache(),
 });
 
