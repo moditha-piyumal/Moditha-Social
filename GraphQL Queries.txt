@@ -1,0 +1,210 @@
+query {
+  users {
+    id
+    name
+    email
+  }
+}
+------------
+{
+  "data": {
+    "users": [
+      {
+        "id": "675ac57b684b5b5f306ea083",
+        "name": "Updated Name",
+        "email": "updated@example.com"
+      },
+      {
+        "id": "675ac619684b5b5f306ea086",
+        "name": "John Updated",
+        "email": "john.updated@example.com"
+      },
+      {
+        "id": "675b1cf66dbbcd421eedd7da",
+        "name": "John Doe",
+        "email": "johndoe@example.com"
+      },
+      {
+        "id": "675b22e488a3bbf1c780f5c4",
+        "name": "Test User",
+        "email": "testuser@example.com"
+      },
+      {
+        "id": "675baab0a74cead5e2ff8ac1",
+        "name": "AAA",
+        "email": "aaa@aaa.com"
+      },
+      {
+        "id": "675bc5abcdc15d4d80ef90df",
+        "name": "BBB",
+        "email": "bbb@bbb.com"
+      }
+    ]
+  }
+}
+------------
+--------------------
+query {
+  user(id: "675baab0a74cead5e2ff8ac1") {
+    id
+    name
+    email
+  }
+}
+----------------
+{
+  "data": {
+    "user": {
+      "id": "675baab0a74cead5e2ff8ac1",
+      "name": "AAA",
+      "email": "aaa@aaa.com"
+    }
+  }
+}
+-------------------------------
+---------------------------------------
+query {
+  users(name: "AAA") {
+    id
+    name
+    email
+  }
+}
+-------------
+{
+  "data": {
+    "users": [
+      {
+        "id": "675baab0a74cead5e2ff8ac1",
+        "name": "AAA",
+        "email": "aaa@aaa.com"
+      }
+    ]
+  }
+}
+-----------------------
+---------------------------------
+mutation {
+  signupUser(name: "CCC", email: "ccc@ccc.com", password: "ccc") {
+    token
+    user {
+      id
+      name
+      email
+    }
+  }
+}
+---------------
+{
+  "data": {
+    "signupUser": {
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NzVkN2FhNGRmMDZkNDk0YWYxZjk0MDIiLCJlbWFpbCI6ImNjY0BjY2MuY29tIiwiaWF0IjoxNzM0MTc5NDkyLCJleHAiOjE3MzQxODMwOTJ9.npTzYiJhBbPTgD0-5g6XQIJyEv_uSlr2t8nKhuqWXyo",
+      "user": {
+        "id": "675d7aa4df06d494af1f9402",
+        "name": "CCC",
+        "email": "ccc@ccc.com"
+      }
+    }
+  }
+}
+------------------------------
+--------------------------------------
+mutation {
+  loginUser(email: "ccc@ccc.com", password: "ccc") {
+    token
+    user {
+      id
+      name
+      email
+    }
+  }
+}
+----------
+{
+  "data": {
+    "loginUser": {
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NzVkN2FhNGRmMDZkNDk0YWYxZjk0MDIiLCJlbWFpbCI6ImNjY0BjY2MuY29tIiwiaWF0IjoxNzM0MTc5NjIyLCJleHAiOjE3MzQxODMyMjJ9.6tOnv1iPFbR0MD6gKqygIlUoDS-Im6Be_u9H6fT9pJA",
+      "user": {
+        "id": "675d7aa4df06d494af1f9402",
+        "name": "CCC",
+        "email": "ccc@ccc.com"
+      }
+    }
+  }
+}
+----------
+------------------------
+mutation {
+  updateUser(id: "675ac57b684b5b5f306ea083", name: "DDD", email: "ddd@ddd.com") {
+    id
+    name
+    email
+  }
+}
+----------------------
+{
+  "data": {
+    "updateUser": {
+      "id": "675ac57b684b5b5f306ea083",
+      "name": "DDD",
+      "email": "ddd@ddd.com"
+    }
+  }
+}
+----------
+------------------------
+mutation {
+  loginUser(email: "ddd@ddd.com", password: "newpassword") {
+    token
+    user {
+      id
+      name
+      email
+    }
+  }
+}
+--------
+{
+  "errors": [
+    {
+      "message": "Invalid password",
+      "locations": [
+        {
+          "line": 2,
+          "column": 3
+        }
+      ],
+      "path": [
+        "loginUser"
+      ],
+      "extensions": {
+        "code": "INTERNAL_SERVER_ERROR",
+        "exception": {
+          "stacktrace": [
+            "Error: Invalid password",
+            "    at Object.loginUser (C:\\Moditha-Social\\Moditha-Social\\backend\\index.js:53:32)"
+          ]
+        }
+      }
+    }
+  ],
+  "data": null
+}
+---------------
+----------------------------
+query {
+  users(name: "NonExistentName") {
+    id
+    name
+    email
+  }
+}
+
+--------------------
+{
+  "data": {
+    "users": []
+  }
+}
+----------
+------------------------------

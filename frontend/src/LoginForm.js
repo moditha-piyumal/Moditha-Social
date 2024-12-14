@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useMutation, gql } from "@apollo/client";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 
-// GraphQL mutation for login
 const LOGIN_USER = gql`
 	mutation LoginUser($email: String!, $password: String!) {
 		loginUser(email: $email, password: $password) {
@@ -17,7 +17,8 @@ const LOGIN_USER = gql`
 
 function LoginForm() {
 	const [formData, setFormData] = useState({ email: "", password: "" });
-	const [loginUser, { data, loading, error }] = useMutation(LOGIN_USER);
+	const [loginUser, { loading, error }] = useMutation(LOGIN_USER);
+	const navigate = useNavigate(); // Initialize useNavigate
 
 	const handleChange = (e) => {
 		const { name, value } = e.target;
@@ -28,10 +29,13 @@ function LoginForm() {
 		e.preventDefault();
 		try {
 			const response = await loginUser({ variables: formData });
-			console.log("Login successful:", response.data.loginUser);
-			alert("Login successful!");
-			// Save token to localStorage
 			localStorage.setItem("token", response.data.loginUser.token);
+			console.log(
+				"Login successful, token saved to localStorage:",
+				response.data.loginUser.token
+			);
+			alert("Login successful!");
+			navigate("/dashboard"); // Use navigate to redirect
 		} catch (err) {
 			console.error("Login error:", err.message);
 		}
