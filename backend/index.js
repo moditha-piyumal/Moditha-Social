@@ -28,8 +28,15 @@ const resolvers = {
 			return await User.findById(id);
 		},
 		getPosts: async () => {
-			// Fetch all posts and populate the author field
-			return await Post.find().populate("author").sort({ createdAt: -1 });
+			// Fetch all posts, populate the author, and format createdAt
+			const posts = await Post.find()
+				.populate("author")
+				.sort({ createdAt: -1 });
+			return posts.map((post) => ({
+				...post._doc,
+				id: post._id,
+				createdAt: post.createdAt.toISOString(), // Convert createdAt to ISO string
+			}));
 		},
 	},
 	Mutation: {
