@@ -60,12 +60,13 @@ const ADD_COMMENT = gql`
 function Dashboard() {
 	const navigate = useNavigate();
 	const [newPostContent, setNewPostContent] = useState("");
-	const [commentInputs, setCommentInputs] = useState({});
 	const [selectedUserId, setSelectedUserId] = useState(null);
+	const [commentInput, setCommentInput] = useState("");
 
-	const { loading, error, data } = useQuery(GET_POSTS, {
-		fetchPolicy: "no-cache",
-	});
+	// const { loading, error, data } = useQuery(GET_POSTS, {
+	// 	fetchPolicy: "no-cache",
+	// });
+	const { loading, error, data, refetch } = useQuery(GET_POSTS);
 
 	const [createPost] = useMutation(CREATE_POST, {
 		refetchQueries: [{ query: GET_POSTS }],
@@ -93,13 +94,20 @@ function Dashboard() {
 
 	const handleAddComment = async (postId) => {
 		try {
+			// Add the comment
 			await addComment({
-				variables: { postId, content: commentInputs[postId] },
+				variables: { postId, content: commentInput[postId] },
 			});
-			setCommentInputs({ ...commentInputs, [postId]: "" });
-			alert("Comment added successfully!");
+
+			// Clear the input field for the specific post
+			setCommentInput({ ...commentInput, [postId]: "" });
+
+			console.log("Comment added successfully!");
+
+			// Refetch posts to update the UI with the new comment
+			await refetch();
 		} catch (err) {
-			console.error("Error adding comment:", err.message);
+			console.error("Failed to add comment:", err.message);
 			alert("Failed to add comment. Please try again.");
 		}
 	};
@@ -117,7 +125,7 @@ function Dashboard() {
 	}
 
 	return (
-		<div>
+		<div className="container">
 			<h2>Dashboard</h2>
 			<p>Welcome to the dashboard!</p>
 
@@ -139,71 +147,75 @@ function Dashboard() {
 
 			<h3>Posts</h3>
 			<ul>
-				{data.getPosts.map((post) => (
-					<li key={post.id}>
-						<p>
-							<strong
-								style={{ cursor: "pointer", color: "blue" }}
-								onClick={() => setSelectedUserId(post.author.id)}
-							>
-								{post.author.name}
-							</strong>{" "}
-							({post.author.email})<br />
-							{post.content}
-						</p>
-						<p>
-							<small>
-								Posted on: {new Date(parseInt(post.createdAt)).toLocaleString()}
-							</small>
-						</p>
+				{data.getPosts
+					.slice() // Create a shallow copy of posts to avoid mutating the original data
+					.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) // Sort posts
+					.map((post) => (
+						<li key={post.id}>
+							<p>
+								<strong
+									style={{ cursor: "pointer", color: "blue" }}
+									onClick={() => setSelectedUserId(post.author.id)}
+								>
+									{post.author.name}
+								</strong>{" "}
+								({post.author.email})<br />
+								{post.content}
+							</p>
+							<p>
+								<small>
+									Posted on:{" "}
+									{new Date(parseInt(post.createdAt)).toLocaleString()}
+								</small>
+							</p>
 
-						<div style={{ marginLeft: "20px" }}>
-							<h4>Comments:</h4>
-							{post.comments.length === 0 ? (
-								<p>No comments yet.</p>
-							) : (
-								<ul>
-									{post.comments.map((comment, index) => (
-										<li key={index}>
-											<p>
-												<strong>{comment.author.name}</strong> (
-												{comment.author.email})<br />
-												{comment.content}
-											</p>
-											<p>
-												<small>
-													Commented on:{" "}
-													{new Date(
-														parseInt(comment.createdAt)
-													).toLocaleString()}
-												</small>
-											</p>
-										</li>
-									))}
-								</ul>
-							)}
+							<div className="comment-section">
+								<h4>Comments:</h4>
+								{post.comments.length === 0 ? (
+									<p>No comments yet.</p>
+								) : (
+									<ul>
+										{post.comments.map((comment, index) => (
+											<li key={index}>
+												<p className="comment-author">
+													<strong>{comment.author.name}</strong> (
+													{comment.author.email})<br />
+													{comment.content}
+												</p>
+												<p>
+													<small>
+														Commented on:{" "}
+														{new Date(
+															parseInt(comment.createdAt)
+														).toLocaleString()}
+													</small>
+												</p>
+											</li>
+										))}
+									</ul>
+								)}
 
-							<h4>Add a Comment:</h4>
-							<input
-								type="text"
-								placeholder="Write a comment..."
-								value={commentInputs[post.id] || ""}
-								onChange={(e) =>
-									setCommentInputs({
-										...commentInputs,
-										[post.id]: e.target.value,
-									})
-								}
-							/>
-							<button
-								onClick={() => handleAddComment(post.id)}
-								disabled={!commentInputs[post.id]?.trim()}
-							>
-								Submit
-							</button>
-						</div>
-					</li>
-				))}
+								<h4>Add a Comment:</h4>
+								<input
+									type="text"
+									placeholder="Write a comment..."
+									value={commentInput[post.id] || ""}
+									onChange={(e) =>
+										setCommentInput({
+											...commentInput,
+											[post.id]: e.target.value,
+										})
+									}
+								/>
+								<button
+									onClick={() => handleAddComment(post.id)}
+									disabled={!commentInput[post.id]?.trim()}
+								>
+									Submit
+								</button>
+							</div>
+						</li>
+					))}
 			</ul>
 		</div>
 	);

@@ -4,12 +4,13 @@ import SignupForm from "./SignupForm";
 import LoginForm from "./LoginForm";
 import Dashboard from "./Dashboard";
 import PrivateRoute from "./PrivateRoute"; // Import PrivateRoute
+import "./App.css"; // Import the global CSS
 
 function App() {
 	return (
 		<Router>
 			<div>
-				<h1>Welcome to the Social Media App</h1>
+				<h1>Welcome to Moditha Social</h1>
 				<Routes>
 					<Route
 						path="/"

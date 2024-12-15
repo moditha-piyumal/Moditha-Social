@@ -48,7 +48,8 @@ const resolvers = {
 		getPosts: async () => {
 			const posts = await Post.find()
 				.populate("author")
-				.populate("comments.author");
+				.populate("comments.author")
+				.sort({ createdAt: -1 }); // Sort posts by createdAt descending
 
 			return posts.map((post) => ({
 				...post._doc,
