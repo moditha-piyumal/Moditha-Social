@@ -7,11 +7,18 @@ const typeDefs = gql`
 		email: String!
 	}
 
+	type Comment {
+		content: String!
+		author: User!
+		createdAt: String!
+	}
+
 	type Post {
 		id: ID!
 		content: String!
 		author: User!
 		createdAt: String!
+		comments: [Comment!]! # Include comments
 	}
 
 	type AuthPayload {
@@ -37,6 +44,7 @@ const typeDefs = gql`
 		loginUser(email: String!, password: String!): AuthPayload!
 		updateUser(id: ID!, name: String, email: String): User!
 		createPost(content: String!): Post! # New mutation for creating posts
+		addComment(postId: ID!, content: String!): Post!
 	}
 `;
 

@@ -46,14 +46,38 @@ const resolvers = {
 		},
 
 		getPosts: async () => {
-			// Fetch all posts, populate the author, and format createdAt
 			const posts = await Post.find()
 				.populate("author")
-				.sort({ createdAt: -1 });
+				.populate("comments.author");
+
 			return posts.map((post) => ({
 				...post._doc,
-				id: post._id,
-				createdAt: post.createdAt.toISOString(), // Convert createdAt to ISO string
+				id: post._id ? post._id.toString() : "N/A", // Ensure Post.id is valid
+				author: post.author
+					? {
+							id: post.author._id ? post.author._id.toString() : "N/A", // Check author.id safely
+							name: post.author.name || "Anonymous",
+							email: post.author.email || "no-email@example.com",
+					  }
+					: { id: "N/A", name: "Deleted User", email: "no-email@example.com" },
+				comments: post.comments
+					.filter((comment) => comment.author) // Filter out comments with no author
+					.map((comment) => ({
+						...comment._doc,
+						author: comment.author
+							? {
+									id: comment.author._id
+										? comment.author._id.toString()
+										: "N/A", // Check comment author.id safely
+									name: comment.author.name || "Anonymous",
+									email: comment.author.email || "no-email@example.com",
+							  }
+							: {
+									id: "N/A",
+									name: "Deleted User",
+									email: "no-email@example.com",
+							  },
+					})),
 			}));
 		},
 	},
@@ -149,6 +173,35 @@ const resolvers = {
 
 			// Populate the author field before returning
 			return newPost.populate("author");
+		},
+		addComment: async (_, { postId, content }, context) => {
+			// Ensure user is authenticated
+			const token = context.req.headers.authorization;
+			if (!token) throw new Error("Authorization required");
+
+			let userId;
+			try {
+				const decoded = jwt.verify(token.split(" ")[1], JWT_SECRET);
+				userId = decoded.userId;
+			} catch (err) {
+				throw new Error("Invalid or expired token");
+			}
+
+			// Find the post
+			const post = await Post.findById(postId);
+			if (!post) throw new Error("Post not found");
+
+			// Add the comment
+			const comment = {
+				content,
+				author: userId,
+				createdAt: new Date(),
+			};
+			post.comments.push(comment);
+			await post.save();
+
+			// Populate the author for the new comment
+			return post.populate("comments.author");
 		},
 	},
 };

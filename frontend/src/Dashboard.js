@@ -9,12 +9,20 @@ const GET_POSTS = gql`
 		getPosts {
 			id
 			content
+			createdAt
 			author {
 				id
 				name
 				email
 			}
-			createdAt
+			comments {
+				content
+				createdAt
+				author {
+					name
+					email
+				}
+			}
 		}
 	}
 `;
@@ -40,7 +48,9 @@ function Dashboard() {
 	const [selectedUserId, setSelectedUserId] = useState(null); // Track selected user for profile
 
 	// Fetch posts
-	const { loading, error, data } = useQuery(GET_POSTS);
+	const { loading, error, data } = useQuery(GET_POSTS, {
+		fetchPolicy: "no-cache", // Ensure fresh data is fetched
+	});
 
 	// Mutation to create a post
 	const [createPost] = useMutation(CREATE_POST, {
@@ -118,9 +128,37 @@ function Dashboard() {
 						</p>
 						<p>
 							<small>
-								Posted on: {new Date(post.createdAt).toLocaleString()}
+								Posted on: {new Date(parseInt(post.createdAt)).toLocaleString()}
 							</small>
 						</p>
+
+						{/* Display Comments */}
+						<div style={{ marginLeft: "20px" }}>
+							<h4>Comments:</h4>
+							{post.comments.length === 0 ? (
+								<p>No comments yet.</p>
+							) : (
+								<ul>
+									{post.comments.map((comment, index) => (
+										<li key={index}>
+											<p>
+												<strong>{comment.author.name}</strong> (
+												{comment.author.email})<br />
+												{comment.content}
+											</p>
+											<p>
+												<small>
+													Commented on:{" "}
+													{new Date(
+														parseInt(comment.createdAt)
+													).toLocaleString()}
+												</small>
+											</p>
+										</li>
+									))}
+								</ul>
+							)}
+						</div>
 					</li>
 				))}
 			</ul>
