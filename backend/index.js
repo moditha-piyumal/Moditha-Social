@@ -25,8 +25,26 @@ const resolvers = {
 			return await User.find(query);
 		},
 		user: async (_, { id }) => {
-			return await User.findById(id);
+			const user = await User.findById(id);
+			if (!user) throw new Error("User not found");
+
+			const posts = await Post.find({ author: id }).sort({ createdAt: -1 });
+
+			// Format the createdAt field for each post and ensure the id field is included
+			const formattedPosts = posts.map((post) => ({
+				id: post._id.toString(), // Ensure the id field is included and converted to a string
+				content: post.content,
+				createdAt: new Date(post.createdAt).toISOString(),
+			}));
+
+			return {
+				id: user.id,
+				name: user.name,
+				email: user.email,
+				posts: formattedPosts,
+			};
 		},
+
 		getPosts: async () => {
 			// Fetch all posts, populate the author, and format createdAt
 			const posts = await Post.find()
@@ -138,6 +156,7 @@ const resolvers = {
 const server = new ApolloServer({
 	typeDefs,
 	resolvers,
+	introspection: process.env.NODE_ENV === "development", // Enable introspection only in development
 	context: ({ req }) => {
 		// Debug: Log the headers to ensure they are received
 		console.log("Headers received:", req.headers);

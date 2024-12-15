@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, gql } from "@apollo/client";
 import { useNavigate } from "react-router-dom";
+import Profile from "./Profile";
 
 // GraphQL queries and mutations
 const GET_POSTS = gql`
@@ -9,6 +10,7 @@ const GET_POSTS = gql`
 			id
 			content
 			author {
+				id
 				name
 				email
 			}
@@ -23,6 +25,7 @@ const CREATE_POST = gql`
 			id
 			content
 			author {
+				id
 				name
 				email
 			}
@@ -34,13 +37,14 @@ const CREATE_POST = gql`
 function Dashboard() {
 	const navigate = useNavigate();
 	const [newPostContent, setNewPostContent] = useState("");
+	const [selectedUserId, setSelectedUserId] = useState(null); // Track selected user for profile
 
 	// Fetch posts
 	const { loading, error, data } = useQuery(GET_POSTS);
 
 	// Mutation to create a post
 	const [createPost] = useMutation(CREATE_POST, {
-		refetchQueries: [{ query: GET_POSTS }], // Refresh the posts after creating a new one
+		refetchQueries: [{ query: GET_POSTS }],
 	});
 
 	// Handle user logout
@@ -55,7 +59,7 @@ function Dashboard() {
 		e.preventDefault();
 		try {
 			await createPost({ variables: { content: newPostContent } });
-			setNewPostContent(""); // Clear the input field
+			setNewPostContent("");
 		} catch (err) {
 			console.error("Error creating post:", err.message);
 		}
@@ -63,6 +67,16 @@ function Dashboard() {
 
 	if (loading) return <p>Loading posts...</p>;
 	if (error) return <p>Error: {error.message}</p>;
+
+	// If a user is selected, render their profile
+	if (selectedUserId) {
+		return (
+			<Profile
+				userId={selectedUserId}
+				onBackToDashboard={() => setSelectedUserId(null)}
+			/>
+		);
+	}
 
 	return (
 		<div>
@@ -93,7 +107,13 @@ function Dashboard() {
 				{data.getPosts.map((post) => (
 					<li key={post.id}>
 						<p>
-							<strong>{post.author.name}</strong> ({post.author.email})<br />
+							<strong
+								style={{ cursor: "pointer", color: "blue" }}
+								onClick={() => setSelectedUserId(post.author.id)}
+							>
+								{post.author.name}
+							</strong>{" "}
+							({post.author.email})<br />
 							{post.content}
 						</p>
 						<p>
