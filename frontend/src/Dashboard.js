@@ -3,7 +3,6 @@ import { useQuery, useMutation, gql } from "@apollo/client";
 import { useNavigate } from "react-router-dom";
 import Profile from "./Profile";
 
-// GraphQL queries and mutations
 const GET_POSTS = gql`
 	query GetPosts {
 		getPosts {
@@ -42,29 +41,46 @@ const CREATE_POST = gql`
 	}
 `;
 
+const ADD_COMMENT = gql`
+	mutation AddComment($postId: ID!, $content: String!) {
+		addComment(postId: $postId, content: $content) {
+			id
+			comments {
+				content
+				createdAt
+				author {
+					name
+					email
+				}
+			}
+		}
+	}
+`;
+
 function Dashboard() {
 	const navigate = useNavigate();
 	const [newPostContent, setNewPostContent] = useState("");
-	const [selectedUserId, setSelectedUserId] = useState(null); // Track selected user for profile
+	const [commentInputs, setCommentInputs] = useState({});
+	const [selectedUserId, setSelectedUserId] = useState(null);
 
-	// Fetch posts
 	const { loading, error, data } = useQuery(GET_POSTS, {
-		fetchPolicy: "no-cache", // Ensure fresh data is fetched
+		fetchPolicy: "no-cache",
 	});
 
-	// Mutation to create a post
 	const [createPost] = useMutation(CREATE_POST, {
 		refetchQueries: [{ query: GET_POSTS }],
 	});
 
-	// Handle user logout
+	const [addComment] = useMutation(ADD_COMMENT, {
+		refetchQueries: [{ query: GET_POSTS }],
+	});
+
 	const handleLogout = () => {
 		localStorage.removeItem("token");
 		alert("Logged out successfully!");
 		navigate("/login");
 	};
 
-	// Handle post submission
 	const handleSubmit = async (e) => {
 		e.preventDefault();
 		try {
@@ -75,10 +91,22 @@ function Dashboard() {
 		}
 	};
 
+	const handleAddComment = async (postId) => {
+		try {
+			await addComment({
+				variables: { postId, content: commentInputs[postId] },
+			});
+			setCommentInputs({ ...commentInputs, [postId]: "" });
+			alert("Comment added successfully!");
+		} catch (err) {
+			console.error("Error adding comment:", err.message);
+			alert("Failed to add comment. Please try again.");
+		}
+	};
+
 	if (loading) return <p>Loading posts...</p>;
 	if (error) return <p>Error: {error.message}</p>;
 
-	// If a user is selected, render their profile
 	if (selectedUserId) {
 		return (
 			<Profile
@@ -93,10 +121,8 @@ function Dashboard() {
 			<h2>Dashboard</h2>
 			<p>Welcome to the dashboard!</p>
 
-			{/* Logout button */}
 			<button onClick={handleLogout}>Logout</button>
 
-			{/* Post creation form */}
 			<h3>Create a New Post</h3>
 			<form onSubmit={handleSubmit}>
 				<textarea
@@ -111,7 +137,6 @@ function Dashboard() {
 				<button type="submit">Post</button>
 			</form>
 
-			{/* Display posts */}
 			<h3>Posts</h3>
 			<ul>
 				{data.getPosts.map((post) => (
@@ -132,7 +157,6 @@ function Dashboard() {
 							</small>
 						</p>
 
-						{/* Display Comments */}
 						<div style={{ marginLeft: "20px" }}>
 							<h4>Comments:</h4>
 							{post.comments.length === 0 ? (
@@ -158,6 +182,25 @@ function Dashboard() {
 									))}
 								</ul>
 							)}
+
+							<h4>Add a Comment:</h4>
+							<input
+								type="text"
+								placeholder="Write a comment..."
+								value={commentInputs[post.id] || ""}
+								onChange={(e) =>
+									setCommentInputs({
+										...commentInputs,
+										[post.id]: e.target.value,
+									})
+								}
+							/>
+							<button
+								onClick={() => handleAddComment(post.id)}
+								disabled={!commentInputs[post.id]?.trim()}
+							>
+								Submit
+							</button>
 						</div>
 					</li>
 				))}
