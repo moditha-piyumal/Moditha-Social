@@ -79,7 +79,7 @@ function Dashboard() {
 	const handleLogout = () => {
 		localStorage.removeItem("token");
 		alert("Logged out successfully!");
-		navigate("/login");
+		navigate("/");
 	};
 
 	const handleSubmit = async (e) => {
@@ -160,7 +160,9 @@ function Dashboard() {
 									{post.author.name}
 								</strong>{" "}
 								({post.author.email})<br />
-								{post.content}
+								<span style={{ fontWeight: "bold", color: "darkgreen" }}>
+									{post.content}
+								</span>
 							</p>
 							<p>
 								<small>
@@ -180,7 +182,9 @@ function Dashboard() {
 												<p className="comment-author">
 													<strong>{comment.author.name}</strong> (
 													{comment.author.email})<br />
-													{comment.content}
+													<span style={{ fontWeight: "bold", color: "maroon" }}>
+														{comment.content}
+													</span>
 												</p>
 												<p>
 													<small>
