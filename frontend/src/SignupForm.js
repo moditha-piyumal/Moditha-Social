@@ -40,7 +40,7 @@ function SignupForm() {
 	};
 
 	return (
-		<div>
+		<div style={{ paddingBottom: 10 }}>
 			<h2>Signup</h2>
 			<form onSubmit={handleSubmit}>
 				<input

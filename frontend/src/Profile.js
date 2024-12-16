@@ -1,5 +1,6 @@
 import React from "react";
 import { useQuery, gql } from "@apollo/client";
+import "./App.css";
 
 // GraphQL query to fetch user details and posts
 const GET_USER = gql`
@@ -12,6 +13,14 @@ const GET_USER = gql`
 				id
 				content
 				createdAt
+				comments {
+					content
+					createdAt
+					author {
+						name
+						email
+					}
+				}
 			}
 		}
 	}
@@ -30,6 +39,8 @@ function Profile({ userId, onBackToDashboard }) {
 
 	return (
 		<div>
+			{/* Button to navigate back to the Dashboard */}
+			<button onClick={onBackToDashboard}>Back to Dashboard</button>
 			<h2>Profile</h2>
 			<p>
 				<strong>Name:</strong> {name}
@@ -42,19 +53,56 @@ function Profile({ userId, onBackToDashboard }) {
 			<h3>Posts by {name}</h3>
 			<ul>
 				{posts.map((post) => (
-					<li key={post.id}>
-						<p>{post.content}</p>
+					<li
+						style={{ border: "solid maroon", marginBottom: "2em" }}
+						key={post.id}
+					>
+						<p>
+							<strong style={{ fontWeight: "bold", color: "brown" }}>
+								{post.content}
+							</strong>
+						</p>
 						<p>
 							<small>
-								Posted on: {new Date(post.createdAt).toLocaleString()}
+								Posted on:{" "}
+								{post.createdAt
+									? new Date(parseInt(post.createdAt)).toLocaleString()
+									: "Invalid Date"}
 							</small>
 						</p>
+
+						{/* Display Comments */}
+						<div style={{ marginLeft: "20px" }}>
+							<h4>Comments:</h4>
+							{post.comments && post.comments.length > 0 ? ( // Safely check for comments
+								<ul>
+									{post.comments.map((comment, index) => (
+										<li key={index}>
+											<p>
+												<strong>{comment.author?.name || "Anonymous"}</strong> (
+												{comment.author?.email || "no-email@example.com"})
+											</p>
+											<p>{comment.content}</p>
+											<p>
+												<small>
+													Commented on:{" "}
+													{comment.createdAt
+														? new Date(
+																parseInt(comment.createdAt)
+														  ).toLocaleString()
+														: "Invalid Date"}
+												</small>
+											</p>
+										</li>
+									))}
+								</ul>
+							) : (
+								<p>No comments yet.</p>
+							)}
+						</div>
 					</li>
 				))}
 			</ul>
-
-			{/* Button to navigate back to the Dashboard */}
-			<button onClick={onBackToDashboard}>Back to Dashboard</button>
 		</div>
 	);
 }

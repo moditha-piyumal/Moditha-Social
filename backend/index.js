@@ -28,13 +28,38 @@ const resolvers = {
 			const user = await User.findById(id);
 			if (!user) throw new Error("User not found");
 
-			const posts = await Post.find({ author: id }).sort({ createdAt: -1 });
+			const posts = await Post.find({ author: id })
+				.populate("comments.author") // Populate comment authors
+				.sort({ createdAt: -1 });
 
-			// Format the createdAt field for each post and ensure the id field is included
+			// Format posts and comments
 			const formattedPosts = posts.map((post) => ({
-				id: post._id.toString(), // Ensure the id field is included and converted to a string
+				id: post._id ? post._id.toString() : "N/A", // Ensure Post.id is valid
 				content: post.content,
-				createdAt: new Date(post.createdAt).toISOString(),
+				createdAt: post.createdAt
+					? new Date(post.createdAt).toISOString()
+					: "Invalid Date",
+				comments: post.comments
+					? post.comments.map((comment) => ({
+							content: comment.content,
+							createdAt: comment.createdAt
+								? new Date(comment.createdAt).toISOString()
+								: "Invalid Date",
+							author: comment.author
+								? {
+										id: comment.author._id
+											? comment.author._id.toString()
+											: "N/A",
+										name: comment.author.name || "Anonymous",
+										email: comment.author.email || "no-email@example.com",
+								  }
+								: {
+										id: "N/A",
+										name: "Deleted User",
+										email: "no-email@example.com",
+								  },
+					  }))
+					: [],
 			}));
 
 			return {
